@@ -1,0 +1,10 @@
+<div #taskStage>
+  <button md-button (click)="onThinkingOfStopingTask()"><b>Thinking of stopping</b></button>
+  <button md-button color="primary" (click)="onStopTask()"><b>Stopped</b></button>
+  <button md-button color="primary" (click)="onFinishTask(true)"><b>Finished Task</b></button>
+  <div class="horizontalLayout">
+    <div class="divMargin" *ngFor="let i of thoughtsToStop">
+      <h2> + </h2>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,8 @@
+.horizontalLayout{
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.divMargin{
+    margin: 5px;
+}
