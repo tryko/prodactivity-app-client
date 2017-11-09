@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter, HostListener } from '@angular/core';
 import { Router } from '@angular/router'
 
 import { TaskService } from '../../services/task.service';
@@ -31,14 +31,18 @@ export class PrimingStageComponent implements OnInit {
 
   ngOnInit() {
   }
+  @HostListener('window:beforeunload', ['$event'])
+  public beforeunloadHandler($event) {
+    $event.returnValue = "are you sure?"
+  }
 
   onThinkingStart() {
     this.thoughtsToStart.push('-')
     this.taskService.updateThinkingOfStarting(new Date().getTime())
   }
-  
+
   onStartTask() {
-    this.taskService.updateStage(new Date().getTime(),false,"workStageInitialState")
+    this.taskService.updateStage(new Date().getTime(), false, "workStageInitialState")
       .subscribe(res => {
         this.router.navigate(['/working-on-task'], { skipLocationChange: true });
       },

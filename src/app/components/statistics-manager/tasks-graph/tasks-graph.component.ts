@@ -18,7 +18,7 @@ export class TasksGraphComponent implements OnInit {
   @ViewChild("recordsChart") chart: ElementRef;
 
   private svgWidth = 900;
-  private svgHeight = 600;
+  private svgHeight = 400;
   private GbS = 2; // gap between stages
   private GbGS = 50; // gap between groups of stages
   private stagesInGroups = [];
@@ -27,7 +27,7 @@ export class TasksGraphComponent implements OnInit {
   private sizeOfGroups = [];
   @Input() latestTasks: Task[];
 
-  constructor() {}
+  constructor() { }
 
   ngOnInit() {
     this.stagesInGroups = this.latestTasks.map(v => v.taskSessions.length);
@@ -71,7 +71,7 @@ export class TasksGraphComponent implements OnInit {
     return Math.floor(
       (this.sizeOfGroups[0] -
         this.GbS * (this.latestTasks[0].taskSessions.length - 1)) /
-        this.latestTasks[0].taskSessions.length
+      this.latestTasks[0].taskSessions.length
     );
   }
 
@@ -89,35 +89,63 @@ export class TasksGraphComponent implements OnInit {
     const heightScale = d3
       .scaleLinear()
       .domain([0, longestTask])
-      .range([0, this.svgHeight - 100]);
+      .range([0, this.svgHeight - 20]);
     const cunmulativeGroupXPos = this.cumulativeXpos(
       this.sizeOfGroups,
       this.GbGS
     );
+    const tempTotalStageTime = [];
 
     let svg = d3.select(this.chart.nativeElement);
-    const g = svg.append("g");
-
-    g
-      .append("g")
+    const taskG = svg
       .selectAll("g")
       .data(data)
       .enter()
       .append("g")
       .attr(
-        "transform",
-        (d, i) => "translate(" + cunmulativeGroupXPos[i] + ",0)"
+      "transform",
+      (d, i) => "translate(" + cunmulativeGroupXPos[i] + ",0)"
       )
-      .selectAll("rect")
+    const stageG = taskG
+      .selectAll("g")
       .data(d => d.taskSessions)
       .enter()
+      .append("g")
+      .attr("transform", (d, i) => "translate(" + (i * this.GbS + i * this.sizeOfStage) + ",0)");
+      
+    const stageRect = stageG
       .append("rect")
-      .attr("x", (d, i) => i * this.GbS + i * this.sizeOfStage)
       .attr("width", this.sizeOfStage)
       .attr("y", d => this.svgHeight - heightScale(d.totalTime))
       .attr("height", d => heightScale(d.totalTime))
-      .attr("fill", "green")
-      .attr("stroke", "grey");
+      .attr("fill", (d, i) => { return i % 2 === 0 ? "#66ccff" : "#99ff66" })
+      .attr("stroke", "grey")
+
+    const line = stageG.selectAll("line")
+      .data(d => {
+        console.log('d', d)
+        if (d && d.thoughtsToStart) {
+          console.log(d.thoughtsToStart)
+
+          return d.thoughtsToStart.map(time => time - d.initTime);
+        } else {
+          return d.stopThoughts.map(time => time - d.initTime);
+        }
+      })
+      .enter()
+      .append("line")
+      .attr("x1", (d, i) => 0)
+      .attr("x2", (d, i) => this.sizeOfStage)
+      .attr("y1", (d: number, i) =>
+        Math.floor(this.svgHeight - heightScale(d)
+        )
+      )
+      .attr("y2", (d: number, i) =>
+        Math.floor(this.svgHeight - heightScale(d)
+        )
+      )
+      .attr("style", "stroke:rgb(200,100,200);stroke-width:2")
+
     console.log("svg", svg);
   }
 }

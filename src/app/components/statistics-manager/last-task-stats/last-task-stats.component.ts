@@ -9,11 +9,11 @@ import * as d3 from "d3";
   selector: "last-task-stats",
   template: `
     <div *ngIf="latestRecord">
-      <h1>{{latestRecord.taskName}} </h1> 
-      <h3> Task total time took:{{totalTaskDuration()}}</h3>
-      
+      <h2>{{latestRecord.taskName}} </h2> 
+      <h3> Total time :{{totalTaskDuration()}} End Time: {{endTime}}</h3>
+      <h3> Total work time: {{totalWorkTime()}}</h3>
     </div>
-    <svg #chart width="600px" height="200px"></svg>
+    <svg #chart [attr.width.px]="chartWidth" [attr.height.px]="chartHeight"></svg>
     <ng-template #loading> Loading latest task</ng-template>
   `,
   styleUrls: ["./last-task-stats.component.css"]
@@ -21,22 +21,82 @@ import * as d3 from "d3";
 export class LastTaskStatsComponent implements OnInit {
   @ViewChild("chart") chart: ElementRef;
 
+  chartWidth:number = 900
+  chartHeight:number = 200
   taskSessionSize: number = 0;
+  totalTimeMS: number = 0;
+  totalWorkTimeMS:number = 0;
+  endTime = "";
 
   @Input() latestRecord;
-  constructor() {}
+  constructor() { }
 
   ngOnInit() {
     console.log("this.latestRecord", this.latestRecord);
     this.taskSessionSize = this.latestRecord.taskSessions.length - 1;
+    this.latestRecord.taskSessions.forEach((stage,index) => { this.totalTimeMS = this.totalTimeMS + stage.totalTime;
+    if(index%2 === 1){this.totalWorkTimeMS = this.totalWorkTimeMS + stage.totalTime} })
+    this.endTime = this.getTimeOfDay(this.latestRecord.initTaskTime + this.totalTimeMS);
     this.chartBuilder();
   }
-  
+
   totalTaskDuration() {
-    let totalTimeMS =
-      this.latestRecord.taskSessions[this.taskSessionSize].initTime -
-      this.latestRecord.taskSessions[0].initTime;
-    const date = new Date(totalTimeMS);
+   return this.timeInMSToHour(this.totalTimeMS);
+  }
+
+  totalWorkTime(){
+   return this.timeInMSToHour(this.totalWorkTimeMS);
+   
+  }
+  chartBuilder() {
+    let gapBetweenStage = 210;
+    let rangeEnd = this.chartWidth - gapBetweenStage;
+    const data = this.latestRecord.taskSessions;
+    const totalTime = this.latestRecord.taskSessions.reduce((sum, value) => {
+      ;
+      return sum + value.totalTime
+    }, 0)
+    console.log('s', totalTime)
+
+
+    const xScale = d3
+      .scaleLinear()
+      .domain([
+        this.latestRecord.taskSessions[0].initTime,
+        this.latestRecord.taskSessions[
+          this.latestRecord.taskSessions.length - 1
+        ].initTime
+      ])
+      .range([0, rangeEnd]);
+
+    const widthScale = d3.scaleLinear().domain([0, totalTime]).range([0, rangeEnd - 36]);
+
+    let svg = d3.select(this.chart.nativeElement);
+    svg
+      .selectAll("rect")
+      .data(data)
+      .enter()
+      .append("rect")
+      .attr("height", 50)
+      .attr("x", d => xScale(d["initTime"]))
+      .attr("width", (d, i) => widthScale(data[i].totalTime))
+      .attr("fill",(d,i) =>  {return i%2===0? "#66ccff":"#99ff66"})
+      .attr("stroke", "grey")
+      .attr("stroke-width", 1);
+
+    svg
+      .selectAll("text")
+      .data(data)
+      .enter()
+      .append("text")
+      .attr("x", d => xScale(d["initTime"]))
+      .attr("y", 65)
+      .text(d => this.getTimeOfDay(d["initTime"]))
+      .style("font-size","10px");
+  }
+  //-----------------utility------------------//
+  timeInMSToHour(timeInMS){
+    const date = new Date(timeInMS);
     let totalTimeArr = [];
     totalTimeArr.push(date.getHours() - 2);
     totalTimeArr.push(date.getMinutes());
@@ -54,50 +114,9 @@ export class LastTaskStatsComponent implements OnInit {
     return totalTimeArr.join(":");
   }
 
-  getTime(timeInMS) {
+  getTimeOfDay(timeInMS) {
     let hour = new Date(timeInMS).toString().slice(16, -18);
     return hour;
-  }
-  chartBuilder() {
-    const data = this.latestRecord.taskSessions;
-    const totalTime = this.latestRecord.taskSessions.reduce( (sum,value) => {;
-      return sum + value.totalTime},0)
-      console.log('s',totalTime)
-      
-
-    const xScale = d3
-      .scaleLinear()
-      .domain([
-        this.latestRecord.taskSessions[0].initTime,
-        this.latestRecord.taskSessions[
-          this.latestRecord.taskSessions.length - 1
-        ].initTime
-      ])
-      .range([0, 436]);
-
-    const widthScale = d3.scaleLinear().domain([0, totalTime]).range([0, 400]);
-
-    let svg = d3.select(this.chart.nativeElement);
-    svg
-      .selectAll("rect")
-      .data(data)
-      .enter()
-      .append("rect")
-      .attr("height", 50)
-      .attr("x", d => xScale(d["initTime"]))
-      .attr("width", (d, i) => widthScale(data[i].totalTime))
-      .attr("fill", "green")
-      .attr("stroke", "grey")
-      .attr("stroke-width", 3);
-
-    svg
-      .selectAll("text")
-      .data(data)
-      .enter()
-      .append("text")
-      .attr("x", d => xScale(d["initTime"]))
-      .attr("y", 75)
-      .text(d => this.getTime(d["initTime"]));
   }
 }
 

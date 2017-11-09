@@ -1,4 +1,4 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit,HostListener } from "@angular/core";
 import { MatDialog, MatDialogRef } from "@angular/material";
 import { Router } from "@angular/router";
 import { TaskService } from "../../services/task.service";
@@ -28,9 +28,13 @@ export class WorkStageComponent implements OnInit {
     public dialog: MatDialog,
     private taskService: TaskService,
     private router: Router
-  ) {}
+  ) { }
+  @HostListener('window:beforeunload', ['$event'])
+  public beforeunloadHandler($event) {
+    return $event.returnValue = "Are you sure?";
+  }
 
-  ngOnInit() {}
+  ngOnInit() { }
 
   onThinkingOfStopingTask() {
     this.thoughtsToStop.push("+");
