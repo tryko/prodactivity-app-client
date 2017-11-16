@@ -49,7 +49,7 @@ export class LastTaskStatsComponent implements OnInit {
    
   }
   chartBuilder() {
-    let gapBetweenStage = 210;
+    let gapBetweenStage = 330;
     let rangeEnd = this.chartWidth - gapBetweenStage;
     const data = this.latestRecord.taskSessions;
     const totalTime = this.latestRecord.taskSessions.reduce((sum, value) => {

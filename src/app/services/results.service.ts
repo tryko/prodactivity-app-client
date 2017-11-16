@@ -14,19 +14,20 @@ import { Task } from "../model/task.model";
 export class ResultsService {
   private url = "http://localhost:3000/";
 
-  constructor(private http: Http) {}
+  constructor(private http: Http) { }
 
   getLatestRecord(): Observable<Task> {
     return this.http
       .get(this.url + "results/latest-result/")
       .map(res => this.extractData(res))
       .catch(err => this.handleError(err));
-  } 
+  }
 
   getRecords(): Observable<Task[]> {
     return this.http
       .get(this.url + "results/ten-latests-results/")
-      .map(res => this.extractData(res))
+      .map(res => { let data = this.extractData(res); return data.reverse() }
+      )
       .catch(err => this.handleError(err));
   }
 

@@ -123,10 +123,7 @@ export class TasksGraphComponent implements OnInit {
 
     const line = stageG.selectAll("line")
       .data(d => {
-        console.log('d', d)
         if (d && d.thoughtsToStart) {
-          console.log(d.thoughtsToStart)
-
           return d.thoughtsToStart.map(time => time - d.initTime);
         } else {
           return d.stopThoughts.map(time => time - d.initTime);
